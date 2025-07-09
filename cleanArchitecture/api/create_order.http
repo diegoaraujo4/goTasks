@@ -1,9 +1,32 @@
+### Create Order
 POST http://localhost:8000/order HTTP/1.1
 Host: localhost:8000
 Content-Type: application/json
 
 {
-    "id":"a",
+    "id":"order-1",
     "price": 100.5,
     "tax": 0.5
+}
+
+### List Orders
+GET http://localhost:8000/order HTTP/1.1
+Host: localhost:8000
+
+### GraphQL - Create Order
+POST http://localhost:8080/query HTTP/1.1
+Host: localhost:8080
+Content-Type: application/json
+
+{
+    "query": "mutation { createOrder(input: { id: \"order-gql-1\", Price: 100.0, Tax: 10.0 }) { id Price Tax FinalPrice } }"
+}
+
+### GraphQL - List Orders
+POST http://localhost:8080/query HTTP/1.1
+Host: localhost:8080
+Content-Type: application/json
+
+{
+    "query": "query { orders { id Price Tax FinalPrice } }"
 }

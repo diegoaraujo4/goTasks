@@ -1,0 +1,63 @@
+# Ignore build artifacts
+*.exe
+*.o
+*.a
+*.so
+*.dll
+
+# Ignore version control
+.git
+.gitignore
+
+# Ignore Go artifacts
+vendor/
+bin/
+dist/
+
+# Ignore node modules if any
+node_modules/
+
+# Ignore IDE files
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Ignore OS generated files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# Ignore Docker files
+.docker/
+Dockerfile*
+docker-compose*.yml
+docker-compose*.yaml
+
+# Ignore temporary files
+*.tmp
+*.temp
+*.log
+
+# Ignore test coverage
+*.out
+coverage.html
+
+# Ignore environment files (we'll copy them explicitly)
+.env.example
+.env.local
+.env.development
+.env.test
+.env.production
+
+# Ignore documentation
+README.md
+*.md
+
+# Ignore other project directories
+clientServerAPI/
+multiThread/
