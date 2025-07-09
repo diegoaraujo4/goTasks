@@ -27,6 +27,32 @@ go.work.sum
 # env file
 .env
 
+# Database files
+*.db
+quotes.db
+
+# Output files
+cotacao.txt
+
+# Docker volumes and data
+data/
+
+# Build artifacts
+build/
+
 # Editor/IDE
 # .idea/
 # .vscode/
+
+# Project specific executables
+server.exe
+client.exe
+server
+client
+
+# Log files
+*.log
+
+# Temporary files
+*.tmp
+*.temp

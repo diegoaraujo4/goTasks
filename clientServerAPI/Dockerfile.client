@@ -1,0 +1,26 @@
+FROM golang:1.22.5-alpine AS builder
+
+WORKDIR /app
+
+COPY go.mod go.sum ./
+
+RUN go mod download
+
+COPY cmd/client/ ./cmd/client/
+
+RUN CGO_ENABLED=0 GOOS=linux go build -a -ldflags="-w -s" -o client ./cmd/client
+
+FROM alpine:latest
+
+RUN apk --no-cache add ca-certificates
+
+WORKDIR /root/
+
+COPY --from=builder /app/client .
+
+COPY run-client.sh .
+RUN chmod +x run-client.sh
+
+RUN mkdir -p /data
+
+CMD ["./run-client.sh"]

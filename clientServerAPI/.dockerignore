@@ -1,0 +1,27 @@
+# Ignore git files
+.git
+.gitignore
+
+# Ignore documentation
+README.md
+*.md
+
+# Ignore build artifacts
+*.exe
+server
+client
+
+# Ignore database files
+*.db
+
+# Ignore temporary files
+*.tmp
+*.log
+
+# Ignore IDE files
+.vscode/
+.idea/
+
+# Ignore Docker files in subdirectories
+**/Dockerfile*
+**/docker-compose*

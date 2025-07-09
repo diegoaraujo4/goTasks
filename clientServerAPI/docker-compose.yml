@@ -1,0 +1,32 @@
+name: go-quotation-app
+
+services:
+  server:
+    build:
+      context: .
+      dockerfile: Dockerfile.server
+    container_name: go-quotation-server
+    ports:
+      - "8080:8080"
+    volumes:
+      - ./data:/data
+    networks:
+      - quotation-network
+    restart: unless-stopped
+
+  client:
+    build:
+      context: .
+      dockerfile: Dockerfile.client
+    container_name: go-quotation-client
+    volumes:
+      - ./data:/data
+    networks:
+      - quotation-network
+    depends_on:
+      - server
+    restart: "no"
+
+networks:
+  quotation-network:
+    driver: bridge
