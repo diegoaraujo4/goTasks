@@ -1,6 +1,6 @@
 package usecase
 
-import "github.com/devfullcycle/20-CleanArch/internal/entity"
+import "cleanarch/internal/entity"
 
 type ListOrdersUseCase struct {
 	OrderRepository entity.OrderRepositoryInterface

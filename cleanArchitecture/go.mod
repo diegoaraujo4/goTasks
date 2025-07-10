@@ -1,4 +1,4 @@
-module github.com/devfullcycle/20-CleanArch
+module cleanarch
 
 go 1.23.0
 

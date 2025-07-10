@@ -8,12 +8,12 @@ package main
 
 import (
 	"database/sql"
-	"github.com/devfullcycle/20-CleanArch/internal/entity"
-	"github.com/devfullcycle/20-CleanArch/internal/event"
-	"github.com/devfullcycle/20-CleanArch/internal/infra/database"
-	"github.com/devfullcycle/20-CleanArch/internal/infra/web"
-	"github.com/devfullcycle/20-CleanArch/internal/usecase"
-	"github.com/devfullcycle/20-CleanArch/pkg/events"
+	"cleanarch/internal/entity"
+	"cleanarch/internal/event"
+	"cleanarch/internal/infra/database"
+	"cleanarch/internal/infra/web"
+	"cleanarch/internal/usecase"
+	"cleanarch/pkg/events"
 	"github.com/google/wire"
 )
 

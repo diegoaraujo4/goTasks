@@ -3,9 +3,9 @@ package service
 import (
 	"context"
 
-	"github.com/devfullcycle/20-CleanArch/internal/entity"
-	"github.com/devfullcycle/20-CleanArch/internal/infra/grpc/pb"
-	"github.com/devfullcycle/20-CleanArch/internal/usecase"
+	"cleanarch/internal/entity"
+	"cleanarch/internal/infra/grpc/pb"
+	"cleanarch/internal/usecase"
 )
 
 type OrderService struct {
