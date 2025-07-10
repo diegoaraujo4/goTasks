@@ -47,8 +47,6 @@ build/
 # Project specific executables
 server.exe
 client.exe
-server
-client
 
 # Log files
 *.log
