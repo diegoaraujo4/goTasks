@@ -6,16 +6,20 @@ import (
 	"net"
 	"net/http"
 
-	graphql_handler "github.com/99designs/gqlgen/graphql/handler"
-	"github.com/99designs/gqlgen/graphql/playground"
 	"cleanarch/configs"
+	"cleanarch/internal/event"
 	"cleanarch/internal/event/handler"
 	"cleanarch/internal/infra/database"
 	"cleanarch/internal/infra/graph"
 	"cleanarch/internal/infra/grpc/pb"
 	"cleanarch/internal/infra/grpc/service"
+	"cleanarch/internal/infra/web"
 	"cleanarch/internal/infra/web/webserver"
+	"cleanarch/internal/usecase"
 	"cleanarch/pkg/events"
+
+	graphql_handler "github.com/99designs/gqlgen/graphql/handler"
+	"github.com/99designs/gqlgen/graphql/playground"
 	"github.com/streadway/amqp"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/reflection"
@@ -43,17 +47,18 @@ func main() {
 		RabbitMQChannel: rabbitMQChannel,
 	})
 
-	createOrderUseCase := NewCreateOrderUseCase(db, eventDispatcher)
-	listOrdersUseCase := NewListOrdersUseCase(db)
+	orderRepository := database.NewOrderRepository(db)
+	orderCreatedEvent := event.NewOrderCreated()
+	createOrderUseCase := usecase.NewCreateOrderUseCase(orderRepository, orderCreatedEvent, eventDispatcher)
+	listOrdersUseCase := usecase.NewListOrdersUseCase(orderRepository)
 
 	webserver := webserver.NewWebServer(configs.WebServerPort)
-	webOrderHandler := NewWebOrderHandler(db, eventDispatcher)
+	webOrderHandler := web.NewWebOrderHandler(eventDispatcher, orderRepository, orderCreatedEvent)
 	webserver.AddHandler("/order", webOrderHandler.OrderHandler)
 	fmt.Println("Starting web server on port", configs.WebServerPort)
 	go webserver.Start()
 
 	grpcServer := grpc.NewServer()
-	orderRepository := database.NewOrderRepository(db)
 	createOrderService := service.NewOrderService(*createOrderUseCase, orderRepository)
 	pb.RegisterOrderServiceServer(grpcServer, createOrderService)
 	reflection.Register(grpcServer)
