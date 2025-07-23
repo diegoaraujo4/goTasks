@@ -1,0 +1,94 @@
+basePath: /
+definitions:
+  domain.ErrorResponse:
+    description: Resposta de erro da API
+    properties:
+      message:
+        example: invalid zipcode
+        type: string
+    type: object
+  domain.WeatherResponse:
+    description: Resposta contendo a temperatura em Celsius, Fahrenheit e Kelvin
+    properties:
+      temp_C:
+        example: 28.5
+        type: number
+      temp_F:
+        example: 83.3
+        type: number
+      temp_K:
+        example: 301.5
+        type: number
+    type: object
+host: localhost:8080
+info:
+  contact:
+    email: support@weatherapi.com
+    name: Suporte da API
+  description: |-
+    API para consulta de temperatura por CEP brasileiro
+    Recebe um CEP válido e retorna a temperatura atual em Celsius, Fahrenheit e Kelvin.
+  license:
+    name: MIT
+    url: https://opensource.org/licenses/MIT
+  termsOfService: http://swagger.io/terms/
+  title: Weather API
+  version: "1.0"
+paths:
+  /health:
+    get:
+      description: Verifica se a aplicação está funcionando
+      produces:
+      - text/plain
+      responses:
+        "200":
+          description: OK
+          schema:
+            type: string
+      summary: Health check
+      tags:
+      - health
+  /weather/{cep}:
+    get:
+      consumes:
+      - application/json
+      description: Recebe um CEP brasileiro válido e retorna a temperatura atual em
+        Celsius, Fahrenheit e Kelvin
+      parameters:
+      - description: CEP brasileiro (8 dígitos)
+        example: '"01310100"'
+        in: path
+        name: cep
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Informações de temperatura
+          schema:
+            $ref: '#/definitions/domain.WeatherResponse'
+        "404":
+          description: CEP não encontrado
+          schema:
+            $ref: '#/definitions/domain.ErrorResponse'
+        "422":
+          description: CEP inválido
+          schema:
+            $ref: '#/definitions/domain.ErrorResponse'
+        "500":
+          description: Erro interno do servidor
+          schema:
+            $ref: '#/definitions/domain.ErrorResponse'
+      summary: Obter temperatura por CEP
+      tags:
+      - weather
+schemes:
+- http
+- https
+swagger: "2.0"
+tags:
+- description: Operações relacionadas ao clima
+  name: weather
+- description: Health check da aplicação
+  name: health
