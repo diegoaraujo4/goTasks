@@ -8,7 +8,7 @@ A aplicação está disponível em produção no Google Cloud Run:
 **https://cloud-run-k76zncoypa-rj.a.run.app**
 
 ### Exemplos de uso:
-- **CEP válido**: https://cloud-run-k76zncoypa-rj.a.run.app/weather/01310100
+- **CEP válido**: https://cloud-run-k76zncoypa-rj.a.run.app/weather/68504-000
 - **Health check**: https://cloud-run-k76zncoypa-rj.a.run.app/health
 - **Documentação Swagger**: https://cloud-run-k76zncoypa-rj.a.run.app/swagger/index.html
 
@@ -89,7 +89,7 @@ export WEATHER_API_KEY=your_api_key_here
 go run ./cmd/api
 
 # 4. Testar a API
-curl http://localhost:8080/weather/01310100
+curl http://localhost:8080/weather/68504-000
 
 # 5. Acessar documentação Swagger
 # http://localhost:8080/swagger/index.html
