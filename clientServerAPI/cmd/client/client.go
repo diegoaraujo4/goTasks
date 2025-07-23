@@ -39,7 +39,7 @@ func fetchQuoteFromServer() (*Quote, error) {
 
 		// Wait before retrying (exponential backoff)
 		if attempt < maxRetries {
-			waitTime := time.Duration(attempt) * 1 * time.Second
+			waitTime := time.Duration(attempt) * 2 * time.Second
 			log.Printf("Waiting %v before retry...", waitTime)
 			time.Sleep(waitTime)
 		}
@@ -142,6 +142,7 @@ func main() {
 	if err != nil {
 		log.Printf("Failed to fetch quote from server after %d attempts: %v", maxRetries, err)
 		log.Fatal("Exiting due to repeated failures")
+		os.Exit(1)
 	}
 
 	log.Printf("Successfully obtained exchange rate: %s", quote.Bid)
