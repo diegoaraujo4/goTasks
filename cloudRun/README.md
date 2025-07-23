@@ -2,6 +2,16 @@
 
 Sistema desenvolvido em Go que recebe um CEP brasileiro, identifica a cidade correspondente e retorna as informações de temperatura atual em Celsius, Fahrenheit e Kelvin.
 
+## 🌐 Aplicação em Produção
+
+A aplicação está disponível em produção no Google Cloud Run:
+**https://cloud-run-k76zncoypa-rj.a.run.app**
+
+### Exemplos de uso:
+- **CEP válido**: https://cloud-run-k76zncoypa-rj.a.run.app/weather/01310100
+- **Health check**: https://cloud-run-k76zncoypa-rj.a.run.app/health
+- **Documentação Swagger**: https://cloud-run-k76zncoypa-rj.a.run.app/swagger/index.html
+
 ## Funcionalidades
 
 - ✅ Validação de CEP (8 dígitos)
@@ -13,7 +23,7 @@ Sistema desenvolvido em Go que recebe um CEP brasileiro, identifica a cidade cor
 - ✅ Containerização com Docker
 - ✅ Documentação Swagger/OpenAPI
 - ✅ Interface Swagger UI
-- ✅ Pronto para deploy no Google Cloud Run
+- ✅ Deploy no Google Cloud Run
 
 ## Documentação da API
 
@@ -72,13 +82,16 @@ OK
 # 1. Navegar para o diretório
 cd cloudRun
 
-# 2. Executar a aplicação (API key já configurada)
+# 2. Configure a variável de ambiente
+export WEATHER_API_KEY=your_api_key_here
+
+# 3. Executar a aplicação
 go run ./cmd/api
 
-# 3. Testar a API
+# 4. Testar a API
 curl http://localhost:8080/weather/01310100
 
-# 4. Acessar documentação Swagger
+# 5. Acessar documentação Swagger
 # http://localhost:8080/swagger/index.html
 ```
 
@@ -96,8 +109,6 @@ curl http://localhost:8080/weather/01310100
 3. Obtenha sua API key
 4. Configure a variável de ambiente `WEATHER_API_KEY`
 
-> **Nota**: Este projeto já está configurado com uma chave de exemplo (`34d03a56db334a6caca234735252207`) para testes.
-
 ## Executando Localmente
 
 ### Pré-requisitos
@@ -114,7 +125,7 @@ cd cloudRun
 go mod download
 
 # 3. Configure a variável de ambiente
-export WEATHER_API_KEY=34d03a56db334a6caca234735252207
+export WEATHER_API_KEY=your_api_key_here
 
 # 4. Execute a aplicação
 go run ./cmd/api
@@ -132,32 +143,17 @@ cd deployments && docker-compose up --build
 
 ### Com Make
 ```bash
-# Baixar dependências
-make deps
-
-# Gerar documentação Swagger
-make swagger-gen
-
-# Executar com Swagger UI
-make swagger-serve
-
-# Executar testes
-make test
-
-# Executar com coverage
-make test-coverage
-
-# Build da aplicação
-make build
-
-# Executar localmente
-make run
-
 # Build da imagem Docker
 make docker-build
 
 # Executar com Docker
 make docker-run
+
+# Executar testes em container Docker
+make docker-test
+
+# Parar containers
+make docker-stop
 ```
 
 ## Documentação Swagger
@@ -228,7 +224,7 @@ make docker-test
 ### Deploy Manual
 ```bash
 # 1. Configure sua chave da WeatherAPI
-export WEATHER_API_KEY=34d03a56db334a6caca234735252207
+export WEATHER_API_KEY=your_api_key_here
 
 # 2. Deploy usando gcloud
 gcloud run deploy weather-api \
@@ -241,7 +237,8 @@ gcloud run deploy weather-api \
 
 ### Deploy com Make
 ```bash
-make deploy WEATHER_API_KEY=34d03a56db334a6caca234735252207
+make docker-build
+make docker-run
 ```
 
 ## Estrutura do Projeto
@@ -303,17 +300,22 @@ cloudRun/
 
 ## Exemplos de Uso
 
-### CEP Válido
+### Exemplos de uso:
+- **CEP válido**: https://cloud-run-k76zncoypa-rj.a.run.app/weather/01310100
+- **Health check**: https://cloud-run-k76zncoypa-rj.a.run.app/health
+- **Documentação Swagger**: https://cloud-run-k76zncoypa-rj.a.run.app/swagger/index.html
+
+### CEP Válido (Local)
 ```bash
 curl http://localhost:8080/weather/01310-100
 ```
 
-### CEP Inválido
+### CEP Inválido (Local)
 ```bash
 curl http://localhost:8080/weather/123
 ```
 
-### CEP Não Encontrado
+### CEP Não Encontrado (Local)
 ```bash
 curl http://localhost:8080/weather/99999999
 ```
