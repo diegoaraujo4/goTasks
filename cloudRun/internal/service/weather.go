@@ -2,6 +2,7 @@ package service
 
 import (
 	"fmt"
+	"log"
 
 	"cloudrun/internal/domain"
 	"cloudrun/pkg/temperature"
@@ -35,13 +36,16 @@ func (s *WeatherService) GetWeatherByCEP(cep string) (*domain.WeatherResponse, e
 	// Get location by CEP
 	location, err := s.locationRepo.GetLocationByCEP(cleanCEP)
 	if err != nil {
+		log.Printf("Error fetching location for CEP %s: %v", cleanCEP, err)
 		return nil, ErrCEPNotFound
 	}
 
 	// Get weather data for the location
 	locationQuery := fmt.Sprintf("%s,%s", location.Localidade, location.UF)
+	log.Printf("Fetching weather for location: %s", locationQuery)
 	weather, err := s.weatherDataRepo.GetWeatherByLocation(locationQuery)
 	if err != nil {
+		log.Printf("Error fetching weather for location %s: %v", locationQuery, err)
 		return nil, ErrWeatherDataUnavailable
 	}
 
