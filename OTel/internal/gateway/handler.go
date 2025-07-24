@@ -28,6 +28,12 @@ type ErrorResponse struct {
 	Message string `json:"message"`
 }
 
+// OrchestrationResponse represents a response from the orchestration service
+type OrchestrationResponse struct {
+	Body       []byte
+	StatusCode int
+}
+
 // GatewayHandler handles HTTP requests for the gateway service
 type GatewayHandler struct {
 	orchestrationServiceURL string
@@ -126,7 +132,7 @@ func (h *GatewayHandler) ProcessCEP(w http.ResponseWriter, r *http.Request) {
 	log.Printf("[GATEWAY] CEP validation successful: %s", req.CEP)
 
 	// Forward to orchestration service
-	response, err := h.forwardToOrchestrationService(ctx, req.CEP)
+	orchestrationResp, err := h.forwardToOrchestrationService(ctx, req.CEP)
 	if err != nil {
 		log.Printf("[GATEWAY] Failed to forward request to orchestration service: %v", err)
 		span.SetStatus(codes.Error, "Failed to forward request to orchestration service")
@@ -136,7 +142,19 @@ func (h *GatewayHandler) ProcessCEP(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Return the response from orchestration service
+	// Handle different response status codes from orchestration service
+	if orchestrationResp.StatusCode != http.StatusOK {
+		log.Printf("[GATEWAY] Orchestration service returned error status %d", orchestrationResp.StatusCode)
+		span.SetAttributes(attribute.Int("orchestration.status_code", orchestrationResp.StatusCode))
+		span.SetStatus(codes.Error, fmt.Sprintf("Orchestration service returned status %d", orchestrationResp.StatusCode))
+
+		// Forward the exact status code and response from orchestration service
+		w.WriteHeader(orchestrationResp.StatusCode)
+		w.Write(orchestrationResp.Body)
+		return
+	}
+
+	// Return the successful response from orchestration service
 	duration := time.Since(startTime)
 	log.Printf("[GATEWAY] Successfully processed CEP: %s from %s in %v", req.CEP, clientIP, duration)
 
@@ -147,11 +165,11 @@ func (h *GatewayHandler) ProcessCEP(w http.ResponseWriter, r *http.Request) {
 	span.SetStatus(codes.Ok, "Request processed successfully")
 
 	w.WriteHeader(http.StatusOK)
-	w.Write(response)
+	w.Write(orchestrationResp.Body)
 }
 
 // forwardToOrchestrationService forwards the CEP to the orchestration service
-func (h *GatewayHandler) forwardToOrchestrationService(ctx context.Context, cep string) ([]byte, error) {
+func (h *GatewayHandler) forwardToOrchestrationService(ctx context.Context, cep string) (*OrchestrationResponse, error) {
 	// Start span for orchestration service call
 	_, span := h.tracer.Start(ctx, "gateway.call_orchestration_service")
 	defer span.End()
@@ -210,14 +228,20 @@ func (h *GatewayHandler) forwardToOrchestrationService(ctx context.Context, cep 
 	if resp.StatusCode != http.StatusOK {
 		log.Printf("[GATEWAY] Orchestration service returned error status %d: %s", resp.StatusCode, buf.String())
 		span.SetStatus(codes.Error, fmt.Sprintf("Orchestration service error: %d", resp.StatusCode))
-		return buf.Bytes(), fmt.Errorf("orchestration service error: %d", resp.StatusCode)
+		return &OrchestrationResponse{
+			Body:       buf.Bytes(),
+			StatusCode: resp.StatusCode,
+		}, nil
 	}
 
 	span.SetAttributes(attribute.Int("response.size_bytes", buf.Len()))
 	span.SetStatus(codes.Ok, "Successfully received response from orchestration service")
 
 	log.Printf("[GATEWAY] Successfully received response from orchestration service: %d bytes", buf.Len())
-	return buf.Bytes(), nil
+	return &OrchestrationResponse{
+		Body:       buf.Bytes(),
+		StatusCode: resp.StatusCode,
+	}, nil
 }
 
 // HealthCheck handles health check requests
