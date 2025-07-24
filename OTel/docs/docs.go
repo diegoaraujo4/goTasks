@@ -11,8 +11,8 @@ const docTemplate = `{
         "title": "{{.Title}}",
         "termsOfService": "http://swagger.io/terms/",
         "contact": {
-            "name": "Suporte da API",
-            "email": "support@weatherapi.com"
+            "name": "OTEL Orchestration Support",
+            "email": "support@otel-orchestration.com"
         },
         "license": {
             "name": "MIT",
@@ -23,6 +23,59 @@ const docTemplate = `{
     "host": "{{.Host}}",
     "basePath": "{{.BasePath}}",
     "paths": {
+        "/cep": {
+            "post": {
+                "description": "Validates CEP input and forwards to orchestration service",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "gateway"
+                ],
+                "summary": "Process CEP input",
+                "parameters": [
+                    {
+                        "description": "CEP input",
+                        "name": "cep",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/gateway.CEPRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Success response from orchestration service",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    },
+                    "400": {
+                        "description": "Bad request",
+                        "schema": {
+                            "$ref": "#/definitions/gateway.ErrorResponse"
+                        }
+                    },
+                    "422": {
+                        "description": "Invalid zipcode",
+                        "schema": {
+                            "$ref": "#/definitions/gateway.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "schema": {
+                            "$ref": "#/definitions/gateway.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
         "/health": {
             "get": {
                 "description": "Verifica se a aplicação está funcionando",
@@ -45,7 +98,7 @@ const docTemplate = `{
         },
         "/weather/{cep}": {
             "get": {
-                "description": "Recebe um CEP brasileiro válido e retorna a temperatura atual em Celsius, Fahrenheit e Kelvin",
+                "description": "Recebe um CEP brasileiro válido (já validado pelo Gateway) e retorna a temperatura atual em Celsius, Fahrenheit e Kelvin",
                 "consumes": [
                     "application/json"
                 ],
@@ -60,7 +113,7 @@ const docTemplate = `{
                     {
                         "type": "string",
                         "example": "\"01310100\"",
-                        "description": "CEP brasileiro (8 dígitos)",
+                        "description": "CEP brasileiro (8 dígitos, já validado)",
                         "name": "cep",
                         "in": "path",
                         "required": true
@@ -75,12 +128,6 @@ const docTemplate = `{
                     },
                     "404": {
                         "description": "CEP não encontrado",
-                        "schema": {
-                            "$ref": "#/definitions/domain.ErrorResponse"
-                        }
-                    },
-                    "422": {
-                        "description": "CEP inválido",
                         "schema": {
                             "$ref": "#/definitions/domain.ErrorResponse"
                         }
@@ -110,6 +157,10 @@ const docTemplate = `{
             "description": "Resposta contendo a temperatura em Celsius, Fahrenheit e Kelvin",
             "type": "object",
             "properties": {
+                "city": {
+                    "type": "string",
+                    "example": "São Paulo"
+                },
                 "temp_C": {
                     "type": "number",
                     "example": 28.5
@@ -121,6 +172,22 @@ const docTemplate = `{
                 "temp_K": {
                     "type": "number",
                     "example": 301.5
+                }
+            }
+        },
+        "gateway.CEPRequest": {
+            "type": "object",
+            "properties": {
+                "cep": {
+                    "type": "string"
+                }
+            }
+        },
+        "gateway.ErrorResponse": {
+            "type": "object",
+            "properties": {
+                "message": {
+                    "type": "string"
                 }
             }
         }
@@ -140,11 +207,11 @@ const docTemplate = `{
 // SwaggerInfo holds exported Swagger Info so clients can modify it
 var SwaggerInfo = &swag.Spec{
 	Version:          "1.0",
-	Host:             "localhost:8080",
+	Host:             "localhost:8081",
 	BasePath:         "/",
 	Schemes:          []string{"http", "https"},
-	Title:            "Weather API",
-	Description:      "API para consulta de temperatura por CEP brasileiro\nRecebe um CEP válido e retorna a temperatura atual em Celsius, Fahrenheit e Kelvin.",
+	Title:            "OTEL Orchestration Service",
+	Description:      "Serviço de orquestração para consulta de temperatura por CEP brasileiro\nRecebe um CEP válido e retorna a temperatura atual em Celsius, Fahrenheit e Kelvin.",
 	InfoInstanceName: "swagger",
 	SwaggerTemplate:  docTemplate,
 	LeftDelim:        "{{",

@@ -1,12 +1,15 @@
 package repository
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"net/http"
 	"time"
 
 	"otel/internal/domain"
+
+	"go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp"
 )
 
 // ViaCEPRepository handles communication with ViaCEP API
@@ -19,7 +22,8 @@ type ViaCEPRepository struct {
 func NewViaCEPRepository() *ViaCEPRepository {
 	return &ViaCEPRepository{
 		client: &http.Client{
-			Timeout: 10 * time.Second,
+			Transport: otelhttp.NewTransport(http.DefaultTransport),
+			Timeout:   10 * time.Second,
 		},
 		baseURL: "https://viacep.com.br/ws",
 	}
@@ -29,7 +33,13 @@ func NewViaCEPRepository() *ViaCEPRepository {
 func (r *ViaCEPRepository) GetLocationByCEP(cep string) (*domain.ViaCEPResponse, error) {
 	url := fmt.Sprintf("%s/%s/json/", r.baseURL, cep)
 
-	resp, err := r.client.Get(url)
+	// Create request with context for tracing
+	req, err := http.NewRequestWithContext(context.Background(), "GET", url, nil)
+	if err != nil {
+		return nil, fmt.Errorf("failed to create request: %w", err)
+	}
+
+	resp, err := r.client.Do(req)
 	if err != nil {
 		return nil, fmt.Errorf("failed to fetch location data: %w", err)
 	}

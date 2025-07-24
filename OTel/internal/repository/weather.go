@@ -1,6 +1,7 @@
 package repository
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"net/http"
@@ -8,6 +9,8 @@ import (
 	"time"
 
 	"otel/internal/domain"
+
+	"go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp"
 )
 
 // WeatherAPIRepository handles communication with Weather API
@@ -21,7 +24,8 @@ type WeatherAPIRepository struct {
 func NewWeatherAPIRepository(apiKey string) *WeatherAPIRepository {
 	return &WeatherAPIRepository{
 		client: &http.Client{
-			Timeout: 10 * time.Second,
+			Transport: otelhttp.NewTransport(http.DefaultTransport),
+			Timeout:   10 * time.Second,
 		},
 		apiKey:  apiKey,
 		baseURL: "https://api.weatherapi.com/v1",
@@ -34,7 +38,13 @@ func (r *WeatherAPIRepository) GetWeatherByLocation(location string) (*domain.We
 	encodedLocation := url.QueryEscape(location)
 	url := fmt.Sprintf("%s/current.json?key=%s&q=%s&aqi=no", r.baseURL, r.apiKey, encodedLocation)
 
-	resp, err := r.client.Get(url)
+	// Create request with context for tracing
+	req, err := http.NewRequestWithContext(context.Background(), "GET", url, nil)
+	if err != nil {
+		return nil, fmt.Errorf("failed to create request: %w", err)
+	}
+
+	resp, err := r.client.Do(req)
 	if err != nil {
 		return nil, fmt.Errorf("failed to fetch weather data: %w", err)
 	}

@@ -5,12 +5,12 @@
     ],
     "swagger": "2.0",
     "info": {
-        "description": "API para consulta de temperatura por CEP brasileiro\nRecebe um CEP válido e retorna a temperatura atual em Celsius, Fahrenheit e Kelvin.",
-        "title": "Weather API",
+        "description": "Serviço de orquestração para consulta de temperatura por CEP brasileiro\nRecebe um CEP válido e retorna a temperatura atual em Celsius, Fahrenheit e Kelvin.",
+        "title": "OTEL Orchestration Service",
         "termsOfService": "http://swagger.io/terms/",
         "contact": {
-            "name": "Suporte da API",
-            "email": "support@weatherapi.com"
+            "name": "OTEL Orchestration Support",
+            "email": "support@otel-orchestration.com"
         },
         "license": {
             "name": "MIT",
@@ -18,9 +18,62 @@
         },
         "version": "1.0"
     },
-    "host": "localhost:8080",
+    "host": "localhost:8081",
     "basePath": "/",
     "paths": {
+        "/cep": {
+            "post": {
+                "description": "Validates CEP input and forwards to orchestration service",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "gateway"
+                ],
+                "summary": "Process CEP input",
+                "parameters": [
+                    {
+                        "description": "CEP input",
+                        "name": "cep",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/gateway.CEPRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Success response from orchestration service",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    },
+                    "400": {
+                        "description": "Bad request",
+                        "schema": {
+                            "$ref": "#/definitions/gateway.ErrorResponse"
+                        }
+                    },
+                    "422": {
+                        "description": "Invalid zipcode",
+                        "schema": {
+                            "$ref": "#/definitions/gateway.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "schema": {
+                            "$ref": "#/definitions/gateway.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
         "/health": {
             "get": {
                 "description": "Verifica se a aplicação está funcionando",
@@ -43,7 +96,7 @@
         },
         "/weather/{cep}": {
             "get": {
-                "description": "Recebe um CEP brasileiro válido e retorna a temperatura atual em Celsius, Fahrenheit e Kelvin",
+                "description": "Recebe um CEP brasileiro válido (já validado pelo Gateway) e retorna a temperatura atual em Celsius, Fahrenheit e Kelvin",
                 "consumes": [
                     "application/json"
                 ],
@@ -58,7 +111,7 @@
                     {
                         "type": "string",
                         "example": "\"01310100\"",
-                        "description": "CEP brasileiro (8 dígitos)",
+                        "description": "CEP brasileiro (8 dígitos, já validado)",
                         "name": "cep",
                         "in": "path",
                         "required": true
@@ -73,12 +126,6 @@
                     },
                     "404": {
                         "description": "CEP não encontrado",
-                        "schema": {
-                            "$ref": "#/definitions/domain.ErrorResponse"
-                        }
-                    },
-                    "422": {
-                        "description": "CEP inválido",
                         "schema": {
                             "$ref": "#/definitions/domain.ErrorResponse"
                         }
@@ -108,6 +155,10 @@
             "description": "Resposta contendo a temperatura em Celsius, Fahrenheit e Kelvin",
             "type": "object",
             "properties": {
+                "city": {
+                    "type": "string",
+                    "example": "São Paulo"
+                },
                 "temp_C": {
                     "type": "number",
                     "example": 28.5
@@ -119,6 +170,22 @@
                 "temp_K": {
                     "type": "number",
                     "example": 301.5
+                }
+            }
+        },
+        "gateway.CEPRequest": {
+            "type": "object",
+            "properties": {
+                "cep": {
+                    "type": "string"
+                }
+            }
+        },
+        "gateway.ErrorResponse": {
+            "type": "object",
+            "properties": {
+                "message": {
+                    "type": "string"
                 }
             }
         }

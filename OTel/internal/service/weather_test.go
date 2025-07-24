@@ -1,6 +1,7 @@
 package service
 
 import (
+	"context"
 	"testing"
 
 	"otel/internal/domain"
@@ -106,7 +107,7 @@ func TestWeatherService_GetWeatherByCEP_Success(t *testing.T) {
 
 	for _, tc := range testCases {
 		t.Run(tc.description, func(t *testing.T) {
-			result, err := service.GetWeatherByCEP(tc.cep)
+			result, err := service.GetWeatherByCEP(context.TODO(), tc.cep)
 			if err != nil {
 				t.Fatalf("Expected no error, got %v", err)
 			}
@@ -133,35 +134,12 @@ func TestWeatherService_GetWeatherByCEP_Success(t *testing.T) {
 	}
 }
 
-func TestWeatherService_GetWeatherByCEP_InvalidCEP(t *testing.T) {
-	locationRepo := &MockLocationRepo{}
-	weatherRepo := &MockWeatherRepo{}
-	service := NewWeatherService(locationRepo, weatherRepo)
-
-	invalidCEPs := []string{
-		"123",       // Too short
-		"123456789", // Too long
-		"abcd1234",  // Contains letters
-		"12345-67",  // Invalid format
-		"",          // Empty
-	}
-
-	for _, cep := range invalidCEPs {
-		t.Run("Invalid CEP: "+cep, func(t *testing.T) {
-			_, err := service.GetWeatherByCEP(cep)
-			if err != ErrInvalidCEP {
-				t.Errorf("Expected ErrInvalidCEP, got %v", err)
-			}
-		})
-	}
-}
-
 func TestWeatherService_GetWeatherByCEP_CEPNotFound(t *testing.T) {
 	locationRepo := &MockLocationRepo{shouldFail: true}
 	weatherRepo := &MockWeatherRepo{}
 	service := NewWeatherService(locationRepo, weatherRepo)
 
-	_, err := service.GetWeatherByCEP("99999999")
+	_, err := service.GetWeatherByCEP(context.TODO(), "99999999")
 	if err != ErrCEPNotFound {
 		t.Errorf("Expected ErrCEPNotFound, got %v", err)
 	}
@@ -172,51 +150,9 @@ func TestWeatherService_GetWeatherByCEP_WeatherDataUnavailable(t *testing.T) {
 	weatherRepo := &MockWeatherRepo{shouldFail: true}
 	service := NewWeatherService(locationRepo, weatherRepo)
 
-	_, err := service.GetWeatherByCEP("01310100")
+	_, err := service.GetWeatherByCEP(context.TODO(), "01310100")
 	if err != ErrWeatherDataUnavailable {
 		t.Errorf("Expected ErrWeatherDataUnavailable, got %v", err)
-	}
-}
-
-func TestWeatherService_CEPCleaning(t *testing.T) {
-	// Test that CEP cleaning works correctly (this ensures the validator integration works)
-	locationRepo := &MockLocationRepo{}
-	weatherRepo := &MockWeatherRepo{}
-	service := NewWeatherService(locationRepo, weatherRepo)
-
-	testCases := []struct {
-		inputCEP     string
-		expectedTemp float64
-		description  string
-	}{
-		{
-			inputCEP:     "01310-100", // With dash
-			expectedTemp: 25.5,
-			description:  "CEP with dash should be cleaned",
-		},
-		{
-			inputCEP:     "01310100", // Without dash
-			expectedTemp: 25.5,
-			description:  "CEP without dash should work",
-		},
-		{
-			inputCEP:     " 01310100 ", // With spaces
-			expectedTemp: 25.5,
-			description:  "CEP with spaces should be cleaned",
-		},
-	}
-
-	for _, tc := range testCases {
-		t.Run(tc.description, func(t *testing.T) {
-			result, err := service.GetWeatherByCEP(tc.inputCEP)
-			if err != nil {
-				t.Fatalf("Expected no error for cleaned CEP, got %v", err)
-			}
-
-			if result.TempC != tc.expectedTemp {
-				t.Errorf("Expected temp_C to be %v, got %v", tc.expectedTemp, result.TempC)
-			}
-		})
 	}
 }
 
@@ -248,7 +184,7 @@ func TestWeatherService_LocationQueryConstruction(t *testing.T) {
 
 	for _, tc := range testCases {
 		t.Run(tc.description, func(t *testing.T) {
-			result, err := service.GetWeatherByCEP(tc.cep)
+			result, err := service.GetWeatherByCEP(context.TODO(), tc.cep)
 			if err != nil {
 				t.Fatalf("Expected no error, got %v", err)
 			}

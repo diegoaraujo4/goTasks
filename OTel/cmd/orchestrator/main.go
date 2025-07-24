@@ -1,8 +1,12 @@
 package main
 
 import (
+	"context"
 	"log"
 	"net/http"
+	"os"
+	"os/signal"
+	"syscall"
 	"time"
 
 	_ "otel/docs" // Import docs for swagger
@@ -11,9 +15,11 @@ import (
 	"otel/internal/handler"
 	"otel/internal/repository"
 	"otel/internal/service"
+	"otel/pkg/telemetry"
 
 	"github.com/gorilla/mux"
 	httpSwagger "github.com/swaggo/http-swagger"
+	"go.opentelemetry.io/contrib/instrumentation/github.com/gorilla/mux/otelmux"
 )
 
 // @title OTEL Orchestration Service
@@ -40,6 +46,24 @@ import (
 
 func main() {
 	log.Printf("[MAIN] Starting OTEL Orchestration Service...")
+
+	// Initialize OpenTelemetry tracing
+	zipkinURL := os.Getenv("ZIPKIN_URL")
+	if zipkinURL == "" {
+		zipkinURL = "http://localhost:9411/api/v2/spans" // Default Zipkin URL
+	}
+
+	shutdown, err := telemetry.InitTracer("otel-orchestration", zipkinURL)
+	if err != nil {
+		log.Fatalf("[MAIN] Failed to initialize tracer: %v", err)
+	}
+	defer func() {
+		ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+		defer cancel()
+		if err := shutdown(ctx); err != nil {
+			log.Printf("[MAIN] Error shutting down tracer: %v", err)
+		}
+	}()
 
 	// Load configuration
 	log.Printf("[MAIN] Loading configuration...")
@@ -70,6 +94,9 @@ func main() {
 	log.Printf("[MAIN] Setting up routes...")
 	r := mux.NewRouter()
 
+	// Add OpenTelemetry middleware for automatic instrumentation
+	r.Use(otelmux.Middleware("otel-orchestration"))
+
 	// Add logging middleware
 	r.Use(loggingMiddleware)
 
@@ -83,9 +110,40 @@ func main() {
 	log.Printf("[MAIN] Routes configured: GET /weather/{cep}, GET /health, /swagger/")
 
 	log.Printf("[MAIN] OTEL Orchestration Service starting on port %s", cfg.Port)
+	log.Printf("[MAIN] Zipkin URL: %s", zipkinURL)
 	log.Printf("[MAIN] Swagger documentation available at: http://localhost:%s/swagger/index.html", cfg.Port)
 	log.Printf("[MAIN] Server ready to accept connections...")
-	log.Fatal(http.ListenAndServe(":"+cfg.Port, r))
+
+	// Setup graceful shutdown
+	srv := &http.Server{
+		Addr:    ":" + cfg.Port,
+		Handler: r,
+	}
+
+	// Channel to listen for interrupt signal
+	c := make(chan os.Signal, 1)
+	signal.Notify(c, os.Interrupt, syscall.SIGTERM)
+
+	// Start server in a goroutine
+	go func() {
+		if err := srv.ListenAndServe(); err != nil && err != http.ErrServerClosed {
+			log.Fatalf("[MAIN] Server error: %v", err)
+		}
+	}()
+
+	// Wait for interrupt signal
+	<-c
+	log.Printf("[MAIN] Shutting down server...")
+
+	// Graceful shutdown with timeout
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+
+	if err := srv.Shutdown(ctx); err != nil {
+		log.Printf("[MAIN] Server shutdown error: %v", err)
+	}
+
+	log.Printf("[MAIN] Server shutdown complete")
 }
 
 // loggingMiddleware logs all incoming requests

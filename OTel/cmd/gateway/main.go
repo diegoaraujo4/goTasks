@@ -1,14 +1,21 @@
 package main
 
 import (
+	"context"
 	"log"
 	"net/http"
 	"os"
+	"os/signal"
+	"syscall"
 	"time"
 
+	_ "otel/docs" // Import docs for swagger
 	"otel/internal/gateway"
+	"otel/pkg/telemetry"
 
 	"github.com/gorilla/mux"
+	httpSwagger "github.com/swaggo/http-swagger"
+	"go.opentelemetry.io/contrib/instrumentation/github.com/gorilla/mux/otelmux"
 )
 
 // @title OTEL Gateway Service
@@ -36,6 +43,24 @@ import (
 func main() {
 	log.Printf("[MAIN] Starting OTEL Gateway Service...")
 
+	// Initialize OpenTelemetry tracing
+	zipkinURL := os.Getenv("ZIPKIN_URL")
+	if zipkinURL == "" {
+		zipkinURL = "http://localhost:9411/api/v2/spans" // Default Zipkin URL
+	}
+
+	shutdown, err := telemetry.InitTracer("otel-gateway", zipkinURL)
+	if err != nil {
+		log.Fatalf("[MAIN] Failed to initialize tracer: %v", err)
+	}
+	defer func() {
+		ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+		defer cancel()
+		if err := shutdown(ctx); err != nil {
+			log.Printf("[MAIN] Error shutting down tracer: %v", err)
+		}
+	}()
+
 	// Get orchestration service URL from environment
 	orchestrationURL := os.Getenv("ORCHESTRATION_SERVICE_URL")
 	if orchestrationURL == "" {
@@ -62,6 +87,9 @@ func main() {
 	log.Printf("[MAIN] Setting up routes...")
 	r := mux.NewRouter()
 
+	// Add OpenTelemetry middleware for automatic instrumentation
+	r.Use(otelmux.Middleware("otel-gateway"))
+
 	// Add logging middleware
 	r.Use(loggingMiddleware)
 
@@ -69,7 +97,10 @@ func main() {
 	r.HandleFunc("/cep", gatewayHandler.ProcessCEP).Methods("POST")
 	r.HandleFunc("/health", gatewayHandler.HealthCheck).Methods("GET")
 
-	log.Printf("[MAIN] Routes configured: POST /cep, GET /health")
+	// Swagger documentation
+	r.PathPrefix("/swagger/").Handler(httpSwagger.WrapHandler)
+
+	log.Printf("[MAIN] Routes configured: POST /cep, GET /health, /swagger/")
 
 	// CORS middleware
 	r.Use(func(next http.Handler) http.Handler {
@@ -89,8 +120,40 @@ func main() {
 
 	log.Printf("[MAIN] OTEL Gateway Service starting on port %s", port)
 	log.Printf("[MAIN] Orchestration service URL: %s", orchestrationURL)
+	log.Printf("[MAIN] Zipkin URL: %s", zipkinURL)
+	log.Printf("[MAIN] Swagger documentation available at: http://localhost:%s/swagger/index.html", port)
 	log.Printf("[MAIN] Server ready to accept connections...")
-	log.Fatal(http.ListenAndServe(":"+port, r))
+
+	// Setup graceful shutdown
+	srv := &http.Server{
+		Addr:    ":" + port,
+		Handler: r,
+	}
+
+	// Channel to listen for interrupt signal
+	c := make(chan os.Signal, 1)
+	signal.Notify(c, os.Interrupt, syscall.SIGTERM)
+
+	// Start server in a goroutine
+	go func() {
+		if err := srv.ListenAndServe(); err != nil && err != http.ErrServerClosed {
+			log.Fatalf("[MAIN] Server error: %v", err)
+		}
+	}()
+
+	// Wait for interrupt signal
+	<-c
+	log.Printf("[MAIN] Shutting down server...")
+
+	// Graceful shutdown with timeout
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+
+	if err := srv.Shutdown(ctx); err != nil {
+		log.Printf("[MAIN] Server shutdown error: %v", err)
+	}
+
+	log.Printf("[MAIN] Server shutdown complete")
 }
 
 // loggingMiddleware logs all incoming requests

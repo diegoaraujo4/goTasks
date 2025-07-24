@@ -10,6 +10,9 @@ definitions:
   domain.WeatherResponse:
     description: Resposta contendo a temperatura em Celsius, Fahrenheit e Kelvin
     properties:
+      city:
+        example: São Paulo
+        type: string
       temp_C:
         example: 28.5
         type: number
@@ -20,21 +23,66 @@ definitions:
         example: 301.5
         type: number
     type: object
-host: localhost:8080
+  gateway.CEPRequest:
+    properties:
+      cep:
+        type: string
+    type: object
+  gateway.ErrorResponse:
+    properties:
+      message:
+        type: string
+    type: object
+host: localhost:8081
 info:
   contact:
-    email: support@weatherapi.com
-    name: Suporte da API
+    email: support@otel-orchestration.com
+    name: OTEL Orchestration Support
   description: |-
-    API para consulta de temperatura por CEP brasileiro
+    Serviço de orquestração para consulta de temperatura por CEP brasileiro
     Recebe um CEP válido e retorna a temperatura atual em Celsius, Fahrenheit e Kelvin.
   license:
     name: MIT
     url: https://opensource.org/licenses/MIT
   termsOfService: http://swagger.io/terms/
-  title: Weather API
+  title: OTEL Orchestration Service
   version: "1.0"
 paths:
+  /cep:
+    post:
+      consumes:
+      - application/json
+      description: Validates CEP input and forwards to orchestration service
+      parameters:
+      - description: CEP input
+        in: body
+        name: cep
+        required: true
+        schema:
+          $ref: '#/definitions/gateway.CEPRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Success response from orchestration service
+          schema:
+            additionalProperties: true
+            type: object
+        "400":
+          description: Bad request
+          schema:
+            $ref: '#/definitions/gateway.ErrorResponse'
+        "422":
+          description: Invalid zipcode
+          schema:
+            $ref: '#/definitions/gateway.ErrorResponse'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/gateway.ErrorResponse'
+      summary: Process CEP input
+      tags:
+      - gateway
   /health:
     get:
       description: Verifica se a aplicação está funcionando
@@ -52,10 +100,10 @@ paths:
     get:
       consumes:
       - application/json
-      description: Recebe um CEP brasileiro válido e retorna a temperatura atual em
-        Celsius, Fahrenheit e Kelvin
+      description: Recebe um CEP brasileiro válido (já validado pelo Gateway) e retorna
+        a temperatura atual em Celsius, Fahrenheit e Kelvin
       parameters:
-      - description: CEP brasileiro (8 dígitos)
+      - description: CEP brasileiro (8 dígitos, já validado)
         example: '"01310100"'
         in: path
         name: cep
@@ -70,10 +118,6 @@ paths:
             $ref: '#/definitions/domain.WeatherResponse'
         "404":
           description: CEP não encontrado
-          schema:
-            $ref: '#/definitions/domain.ErrorResponse'
-        "422":
-          description: CEP inválido
           schema:
             $ref: '#/definitions/domain.ErrorResponse'
         "500":
