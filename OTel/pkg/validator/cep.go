@@ -27,3 +27,16 @@ func CleanCEP(cep string) string {
 	cep = strings.ReplaceAll(cep, " ", "")
 	return cep
 }
+
+// FormatCEP formats CEP with dash (XXXXX-XXX)
+func FormatCEP(cep string) string {
+	// Clean the CEP first
+	cleaned := CleanCEP(cep)
+
+	// Add dash if it has 8 digits
+	if len(cleaned) == 8 {
+		return cleaned[:5] + "-" + cleaned[5:]
+	}
+
+	return cleaned
+}

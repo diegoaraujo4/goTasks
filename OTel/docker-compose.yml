@@ -1,7 +1,28 @@
 version: '3.8'
 
 services:
-  weather-api:
+  # Serviço A - Gateway (Input Service)
+  otel-gateway:
+    build: 
+      context: .
+      dockerfile: Dockerfile.gateway
+    ports:
+      - "8081:8081"
+    environment:
+      - PORT=8081
+      - ORCHESTRATION_SERVICE_URL=http://otel-orchestration:8080
+    depends_on:
+      - otel-orchestration
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost:8081/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+  # Serviço B - Orchestration (Weather API)
+  otel-orchestration:
     build: 
       context: .
       dockerfile: Dockerfile
