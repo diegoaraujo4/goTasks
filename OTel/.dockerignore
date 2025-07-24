@@ -1,0 +1,79 @@
+# Binaries
+*.exe
+*.dll
+*.so
+*.dylib
+
+# Test binary, built with `go test -c`
+*.test
+
+# Output of the go coverage tool
+*.out
+
+# Go workspace file
+go.work
+go.work.sum
+
+# IDE files
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS generated files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# Dependencies
+vendor/
+
+# Local environment files
+.env
+.env.local
+.env.*.local
+
+# Logs
+*.log
+
+# Documentation - but keep generated docs for Swagger
+README.md
+API_EXAMPLES.md
+*.md
+
+# Git
+.git/
+.gitignore
+
+# Docker
+docker-compose*.yml
+docker-compose*.yaml
+
+# Build artifacts
+build/
+dist/
+
+# Test files
+*_test.go
+**/*_test.go
+
+# Scripts
+scripts/
+*.sh
+*.ps1
+
+# Swagger/OpenAPI
+swagger.json
+swagger.yaml
+docs.go
+
+# Example files
+.env.example
+
+# Makefile
+Makefile

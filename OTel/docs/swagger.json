@@ -1,0 +1,136 @@
+{
+    "schemes": [
+        "http",
+        "https"
+    ],
+    "swagger": "2.0",
+    "info": {
+        "description": "API para consulta de temperatura por CEP brasileiro\nRecebe um CEP válido e retorna a temperatura atual em Celsius, Fahrenheit e Kelvin.",
+        "title": "Weather API",
+        "termsOfService": "http://swagger.io/terms/",
+        "contact": {
+            "name": "Suporte da API",
+            "email": "support@weatherapi.com"
+        },
+        "license": {
+            "name": "MIT",
+            "url": "https://opensource.org/licenses/MIT"
+        },
+        "version": "1.0"
+    },
+    "host": "localhost:8080",
+    "basePath": "/",
+    "paths": {
+        "/health": {
+            "get": {
+                "description": "Verifica se a aplicação está funcionando",
+                "produces": [
+                    "text/plain"
+                ],
+                "tags": [
+                    "health"
+                ],
+                "summary": "Health check",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            }
+        },
+        "/weather/{cep}": {
+            "get": {
+                "description": "Recebe um CEP brasileiro válido e retorna a temperatura atual em Celsius, Fahrenheit e Kelvin",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "weather"
+                ],
+                "summary": "Obter temperatura por CEP",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "example": "\"01310100\"",
+                        "description": "CEP brasileiro (8 dígitos)",
+                        "name": "cep",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Informações de temperatura",
+                        "schema": {
+                            "$ref": "#/definitions/domain.WeatherResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "CEP não encontrado",
+                        "schema": {
+                            "$ref": "#/definitions/domain.ErrorResponse"
+                        }
+                    },
+                    "422": {
+                        "description": "CEP inválido",
+                        "schema": {
+                            "$ref": "#/definitions/domain.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Erro interno do servidor",
+                        "schema": {
+                            "$ref": "#/definitions/domain.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        }
+    },
+    "definitions": {
+        "domain.ErrorResponse": {
+            "description": "Resposta de erro da API",
+            "type": "object",
+            "properties": {
+                "message": {
+                    "type": "string",
+                    "example": "invalid zipcode"
+                }
+            }
+        },
+        "domain.WeatherResponse": {
+            "description": "Resposta contendo a temperatura em Celsius, Fahrenheit e Kelvin",
+            "type": "object",
+            "properties": {
+                "temp_C": {
+                    "type": "number",
+                    "example": 28.5
+                },
+                "temp_F": {
+                    "type": "number",
+                    "example": 83.3
+                },
+                "temp_K": {
+                    "type": "number",
+                    "example": 301.5
+                }
+            }
+        }
+    },
+    "tags": [
+        {
+            "description": "Operações relacionadas ao clima",
+            "name": "weather"
+        },
+        {
+            "description": "Health check da aplicação",
+            "name": "health"
+        }
+    ]
+}
