@@ -34,7 +34,7 @@ func TestGetWeatherByLocation_URLEncoding(t *testing.T) {
 	var capturedURL string
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		capturedURL = r.URL.String()
-		
+
 		// Return a valid weather response
 		response := domain.WeatherAPIResponse{
 			Current: struct {
@@ -187,11 +187,11 @@ func TestGetWeatherByLocation_NetworkError(t *testing.T) {
 // Test that verifies we're using HTTPS (regression test for the main issue we fixed)
 func TestWeatherAPIRepository_UsesHTTPS(t *testing.T) {
 	repo := NewWeatherAPIRepository("test_key")
-	
+
 	if !strings.HasPrefix(repo.baseURL, "https://") {
 		t.Errorf("Expected base URL to use HTTPS, got %s", repo.baseURL)
 	}
-	
+
 	expectedURL := "https://api.weatherapi.com/v1"
 	if repo.baseURL != expectedURL {
 		t.Errorf("Expected base URL to be %s, got %s", expectedURL, repo.baseURL)
@@ -201,29 +201,29 @@ func TestWeatherAPIRepository_UsesHTTPS(t *testing.T) {
 // Test for various special characters that might need URL encoding
 func TestGetWeatherByLocation_SpecialCharactersEncoding(t *testing.T) {
 	testCases := []struct {
-		location     string
+		location        string
 		expectedEncoded string
-		description  string
+		description     string
 	}{
 		{
-			location:     "São Paulo,SP",
+			location:        "São Paulo,SP",
 			expectedEncoded: "S%C3%A3o+Paulo%2CSP",
-			description:  "Portuguese characters with tilde",
+			description:     "Portuguese characters with tilde",
 		},
 		{
-			location:     "Ribeirão Preto,SP",
+			location:        "Ribeirão Preto,SP",
 			expectedEncoded: "Ribeir%C3%A3o+Preto%2CSP",
-			description:  "Portuguese characters with tilde and ã",
+			description:     "Portuguese characters with tilde and ã",
 		},
 		{
-			location:     "Brasília,DF",
+			location:        "Brasília,DF",
 			expectedEncoded: "Bras%C3%ADlia%2CDF",
-			description:  "Portuguese characters with í",
+			description:     "Portuguese characters with í",
 		},
 		{
-			location:     "Location with spaces",
+			location:        "Location with spaces",
 			expectedEncoded: "Location+with+spaces",
-			description:  "Spaces should be encoded as plus signs",
+			description:     "Spaces should be encoded as plus signs",
 		},
 	}
 
@@ -232,7 +232,7 @@ func TestGetWeatherByLocation_SpecialCharactersEncoding(t *testing.T) {
 			var capturedURL string
 			server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 				capturedURL = r.URL.String()
-				
+
 				response := domain.WeatherAPIResponse{
 					Current: struct {
 						TempC float64 `json:"temp_c"`

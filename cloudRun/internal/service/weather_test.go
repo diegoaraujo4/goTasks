@@ -131,11 +131,11 @@ func TestWeatherService_GetWeatherByCEP_InvalidCEP(t *testing.T) {
 	service := NewWeatherService(locationRepo, weatherRepo)
 
 	invalidCEPs := []string{
-		"123",        // Too short
-		"123456789",  // Too long
-		"abcd1234",   // Contains letters
-		"12345-67",   // Invalid format
-		"",           // Empty
+		"123",       // Too short
+		"123456789", // Too long
+		"abcd1234",  // Contains letters
+		"12345-67",  // Invalid format
+		"",          // Empty
 	}
 
 	for _, cep := range invalidCEPs {
@@ -229,7 +229,7 @@ func TestWeatherService_LocationQueryConstruction(t *testing.T) {
 			description: "CEP for São Paulo (special characters)",
 		},
 		{
-			cep:         "20040020", 
+			cep:         "20040020",
 			description: "CEP for Rio de Janeiro (spaces in name)",
 		},
 		{
@@ -249,11 +249,11 @@ func TestWeatherService_LocationQueryConstruction(t *testing.T) {
 			if result.TempC <= 0 {
 				t.Error("Expected positive temperature")
 			}
-			
+
 			if result.TempF <= result.TempC {
 				t.Error("Expected Fahrenheit to be higher than Celsius for positive temps")
 			}
-			
+
 			if result.TempK <= result.TempC {
 				t.Error("Expected Kelvin to be higher than Celsius")
 			}
