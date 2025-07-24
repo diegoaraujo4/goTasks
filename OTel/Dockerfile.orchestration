@@ -16,8 +16,8 @@ RUN go mod download
 # Copiar o código fonte
 COPY . .
 
-# Compilar a aplicação
-RUN CGO_ENABLED=0 GOOS=linux go build -a -installsuffix cgo -o main ./cmd/api
+# Compilar a aplicação do orchestrator
+RUN CGO_ENABLED=0 GOOS=linux go build -a -installsuffix cgo -o orchestrator ./cmd/orchestrator
 
 # Usar uma imagem mínima para produção
 FROM alpine:latest
@@ -28,11 +28,11 @@ RUN apk --no-cache add ca-certificates
 # Criar diretório de trabalho
 WORKDIR /root/
 
-# Copiar o binário da etapa de build
-COPY --from=builder /app/main .
+# Copiar o binário da aplicação
+COPY --from=builder /app/orchestrator .
 
 # Expor a porta
-EXPOSE 8080
+EXPOSE 8081
 
 # Comando para executar a aplicação
-CMD ["./main"]
+CMD ["./orchestrator"]

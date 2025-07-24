@@ -15,14 +15,14 @@ import (
 	httpSwagger "github.com/swaggo/http-swagger"
 )
 
-// @title Weather API
+// @title OTEL Orchestration Service
 // @version 1.0
-// @description API para consulta de temperatura por CEP brasileiro
+// @description Serviço de orquestração para consulta de temperatura por CEP brasileiro
 // @description Recebe um CEP válido e retorna a temperatura atual em Celsius, Fahrenheit e Kelvin.
 // @termsOfService http://swagger.io/terms/
 
-// @contact.name Suporte da API
-// @contact.email support@weatherapi.com
+// @contact.name OTEL Orchestration Support
+// @contact.email support@otel-orchestration.com
 
 // @license.name MIT
 // @license.url https://opensource.org/licenses/MIT
@@ -65,7 +65,7 @@ func main() {
 	// Swagger documentation
 	r.PathPrefix("/swagger/").Handler(httpSwagger.WrapHandler)
 
-	log.Printf("Server starting on port %s", cfg.Port)
+	log.Printf("OTEL Orchestration Service starting on port %s", cfg.Port)
 	log.Printf("Swagger documentation available at: http://localhost:%s/swagger/index.html", cfg.Port)
 	log.Fatal(http.ListenAndServe(":"+cfg.Port, r))
 }

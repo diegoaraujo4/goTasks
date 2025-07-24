@@ -14,7 +14,7 @@ type Config struct {
 func New() *Config {
 	return &Config{
 		WeatherAPIKey: getEnv("WEATHER_API_KEY", ""),
-		Port:          getEnv("PORT", "8080"),
+		Port:          getEnv("PORT", "8081"),
 	}
 }
 

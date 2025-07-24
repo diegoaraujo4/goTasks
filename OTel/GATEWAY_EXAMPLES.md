@@ -1,28 +1,26 @@
 # OTEL - Exemplos de API
 
-## Serviço A - Gateway (otel-gateway) - Porta 8081
+## Serviço A - Gateway (otel-gateway) - Porta 8080
 
 ### POST /cep - Processar CEP
 ```bash
 # CEP válido
-curl -X POST http://localhost:8081/cep \
+curl -X POST http://localhost:8080/cep \
   -H "Content-Type: application/json" \
   -d '{"cep": "29902555"}'
 
 # Resposta esperada (200):
 {
-  "location": "Linhares - ES",
-  "temperature": {
-    "celsius": 25.5,
-    "fahrenheit": 77.9,
-    "kelvin": 298.65
-  }
+  "city": "Linhares",
+  "temp_C": 25.5,
+  "temp_F": 77.9,
+  "temp_K": 298.5
 }
 ```
 
 ```bash
 # CEP inválido - muito curto
-curl -X POST http://localhost:8081/cep \
+curl -X POST http://localhost:8080/cep \
   -H "Content-Type: application/json" \
   -d '{"cep": "123"}'
 
@@ -34,7 +32,7 @@ curl -X POST http://localhost:8081/cep \
 
 ```bash
 # CEP inválido - com letras
-curl -X POST http://localhost:8081/cep \
+curl -X POST http://localhost:8080/cep \
   -H "Content-Type: application/json" \
   -d '{"cep": "abc12345"}'
 
@@ -44,98 +42,80 @@ curl -X POST http://localhost:8081/cep \
 }
 ```
 
-```bash
-# JSON inválido
-curl -X POST http://localhost:8081/cep \
-  -H "Content-Type: application/json" \
-  -d 'invalid json'
-
-# Resposta esperada (400):
-{
-  "message": "invalid request body"
-}
-```
-
-### GET /health - Health Check do Gateway
-```bash
-curl http://localhost:8081/health
-
-# Resposta esperada (200):
-{
-  "status": "healthy",
-  "service": "otel-gateway"
-}
-```
-
-## Serviço B - Orchestration (otel-orchestration) - Porta 8080
+## Serviço B - Orchestration (otel-orchestration) - Porta 8081
 
 ### GET /weather/{cep} - Consultar temperatura por CEP
 ```bash
-# CEP válido
-curl http://localhost:8080/weather/29902-555
+# CEP válido (8 dígitos)
+curl http://localhost:8081/weather/29902555
 
 # Resposta esperada (200):
 {
-  "location": "Linhares - ES",
-  "temperature": {
-    "celsius": 25.5,
-    "fahrenheit": 77.9,
-    "kelvin": 298.65
-  }
+  "city": "Linhares",
+  "temp_C": 25.5,
+  "temp_F": 77.9,
+  "temp_K": 298.5
 }
 ```
 
 ```bash
-# CEP inválido
-curl http://localhost:8080/weather/123
+# CEP inválido (formato incorreto)
+curl http://localhost:8081/weather/123
 
-# Resposta esperada (400):
+# Resposta esperada (422):
 {
-  "error": "CEP inválido"
+  "message": "invalid zipcode"
 }
 ```
 
-### GET /health - Health Check do Orchestration
 ```bash
-curl http://localhost:8080/health
+# CEP não encontrado (formato correto mas inexistente)
+curl http://localhost:8081/weather/99999999
 
-# Resposta esperada (200):
+# Resposta esperada (404):
 {
-  "status": "OK"
+  "message": "can not find zipcode"
 }
 ```
 
-## Fluxo de Integração
+## Requisitos Atendidos
 
-### Fluxo Normal (CEP Válido)
-1. **Cliente** → POST /cep {"cep": "29902555"} → **Gateway (8081)**
-2. **Gateway** → Valida CEP (8 dígitos, apenas números)
-3. **Gateway** → GET /weather/29902-555 → **Orchestration (8080)**
-4. **Orchestration** → Consulta ViaCEP para localização
-5. **Orchestration** → Consulta WeatherAPI para temperatura
-6. **Orchestration** → Converte temperaturas (C, F, K)
-7. **Orchestration** → Resposta → **Gateway**
-8. **Gateway** → Resposta → **Cliente**
+### ✅ Serviço A (Gateway):
+- **Input:** Recebe POST com `{"cep": "29902555"}`
+- **Validação:** 8 dígitos, apenas números, formato string
+- **Encaminhamento:** Para Serviço B via HTTP quando válido
+- **Erro 422:** "invalid zipcode" quando inválido
 
-### Fluxo de Erro (CEP Inválido)
-1. **Cliente** → POST /cep {"cep": "123"} → **Gateway (8081)**
-2. **Gateway** → Valida CEP (falha na validação)
-3. **Gateway** → Resposta 422 "invalid zipcode" → **Cliente**
+### ✅ Serviço B (Orchestration):
+- **Input:** CEP válido de 8 dígitos
+- **Processamento:** Busca localização + temperatura
+- **Resposta 200:** `{"city": "São Paulo", "temp_C": 28.5, "temp_F": 28.5, "temp_K": 28.5}`
+- **Erro 422:** "invalid zipcode" (formato incorreto)
+- **Erro 404:** "can not find zipcode" (CEP não encontrado)
 
-## Testes com diferentes CEPs
+## Estrutura do Projeto
+
+### 📂 **Localização dos Códigos:**
+- **Gateway (Serviço A):** `cmd/gateway/` → Porta 8080
+- **Orchestrator (Serviço B):** `cmd/orchestrator/` → Porta 8081
+
+## Testes Completos
 
 ```bash
 # CEPs válidos para teste
-curl -X POST http://localhost:8081/cep -H "Content-Type: application/json" -d '{"cep": "01310100"}' # São Paulo - SP
-curl -X POST http://localhost:8081/cep -H "Content-Type: application/json" -d '{"cep": "20040020"}' # Rio de Janeiro - RJ
-curl -X POST http://localhost:8081/cep -H "Content-Type: application/json" -d '{"cep": "30112000"}' # Belo Horizonte - MG
-curl -X POST http://localhost:8081/cep -H "Content-Type: application/json" -d '{"cep": "80010000"}' # Curitiba - PR
-curl -X POST http://localhost:8081/cep -H "Content-Type: application/json" -d '{"cep": "29902555"}' # Linhares - ES
+curl -X POST http://localhost:8080/cep -H "Content-Type: application/json" -d '{"cep": "01310100"}' # São Paulo - SP
+curl -X POST http://localhost:8080/cep -H "Content-Type: application/json" -d '{"cep": "20040020"}' # Rio de Janeiro - RJ
+curl -X POST http://localhost:8080/cep -H "Content-Type: application/json" -d '{"cep": "30112000"}' # Belo Horizonte - MG
+curl -X POST http://localhost:8080/cep -H "Content-Type: application/json" -d '{"cep": "29902555"}' # Linhares - ES
 
 # CEPs inválidos para teste
-curl -X POST http://localhost:8081/cep -H "Content-Type: application/json" -d '{"cep": ""}'        # Vazio
-curl -X POST http://localhost:8081/cep -H "Content-Type: application/json" -d '{"cep": "123"}'     # Muito curto
-curl -X POST http://localhost:8081/cep -H "Content-Type: application/json" -d '{"cep": "123456789"}' # Muito longo
-curl -X POST http://localhost:8081/cep -H "Content-Type: application/json" -d '{"cep": "abc12345"}' # Com letras
-curl -X POST http://localhost:8081/cep -H "Content-Type: application/json" -d '{"cep": "12345-67"}' # Com hífen
+curl -X POST http://localhost:8080/cep -H "Content-Type: application/json" -d '{"cep": ""}'        # Vazio → 422
+curl -X POST http://localhost:8080/cep -H "Content-Type: application/json" -d '{"cep": "123"}'     # Muito curto → 422
+curl -X POST http://localhost:8080/cep -H "Content-Type: application/json" -d '{"cep": "123456789"}' # Muito longo → 422
+curl -X POST http://localhost:8080/cep -H "Content-Type: application/json" -d '{"cep": "abc12345"}' # Com letras → 422
+
+# Teste direto do Serviço B (Orchestrator)
+curl http://localhost:8081/weather/29902555  # CEP válido → 200
+curl http://localhost:8081/weather/123       # CEP inválido → 422  
+curl http://localhost:8081/weather/99999999  # CEP não encontrado → 404
 ```

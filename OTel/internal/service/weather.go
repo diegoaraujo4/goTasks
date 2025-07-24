@@ -55,6 +55,7 @@ func (s *WeatherService) GetWeatherByCEP(cep string) (*domain.WeatherResponse, e
 	tempK := temperature.ConvertCelsiusToKelvin(tempC)
 
 	return &domain.WeatherResponse{
+		City:  location.Localidade,
 		TempC: tempC,
 		TempF: tempF,
 		TempK: tempK,

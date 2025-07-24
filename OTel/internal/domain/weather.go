@@ -3,6 +3,7 @@ package domain
 // WeatherResponse representa a resposta com informações de temperatura
 // @Description Resposta contendo a temperatura em Celsius, Fahrenheit e Kelvin
 type WeatherResponse struct {
+	City  string  `json:"city" example:"São Paulo" description:"Nome da cidade"`
 	TempC float64 `json:"temp_C" example:"28.5" description:"Temperatura em Celsius"`
 	TempF float64 `json:"temp_F" example:"83.3" description:"Temperatura em Fahrenheit"`
 	TempK float64 `json:"temp_K" example:"301.5" description:"Temperatura em Kelvin"`

@@ -81,21 +81,25 @@ func TestWeatherService_GetWeatherByCEP_Success(t *testing.T) {
 	testCases := []struct {
 		cep          string
 		expectedTemp float64
+		expectedCity string
 		description  string
 	}{
 		{
 			cep:          "01310100",
 			expectedTemp: 25.5,
+			expectedCity: "São Paulo",
 			description:  "São Paulo with special characters",
 		},
 		{
 			cep:          "20040020",
 			expectedTemp: 28.0,
+			expectedCity: "Rio de Janeiro",
 			description:  "Rio de Janeiro with spaces",
 		},
 		{
 			cep:          "30112000",
 			expectedTemp: 22.0,
+			expectedCity: "Belo Horizonte",
 			description:  "Belo Horizonte normal name",
 		},
 	}
@@ -109,6 +113,10 @@ func TestWeatherService_GetWeatherByCEP_Success(t *testing.T) {
 
 			if result.TempC != tc.expectedTemp {
 				t.Errorf("Expected temp_C to be %v, got %v", tc.expectedTemp, result.TempC)
+			}
+
+			if result.City != tc.expectedCity {
+				t.Errorf("Expected city to be %v, got %v", tc.expectedCity, result.City)
 			}
 
 			// Verify temperature conversions

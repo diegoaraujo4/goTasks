@@ -11,14 +11,14 @@ build-gateway:
 	go build -o bin/gateway ./cmd/gateway
 
 build-orchestration:
-	go build -o bin/orchestration ./cmd/api
+	go build -o bin/orchestration ./cmd/orchestrator
 
 # Executar localmente
 run-gateway:
-	PORT=8081 ORCHESTRATION_SERVICE_URL=http://localhost:8080 go run ./cmd/gateway
+	PORT=8080 ORCHESTRATION_SERVICE_URL=http://localhost:8081 go run ./cmd/gateway
 
 run-orchestration:
-	PORT=8080 WEATHER_API_KEY=34d03a56db334a6caca234735252207 go run ./cmd/api
+	PORT=8081 WEATHER_API_KEY=34d03a56db334a6caca234735252207 go run ./cmd/orchestrator
 
 # Testes
 test:

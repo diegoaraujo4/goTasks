@@ -22,7 +22,7 @@ import (
 // @license.name MIT
 // @license.url https://opensource.org/licenses/MIT
 
-// @host localhost:8081
+// @host localhost:8080
 // @BasePath /
 // @schemes http https
 
@@ -36,13 +36,13 @@ func main() {
 	// Get orchestration service URL from environment
 	orchestrationURL := os.Getenv("ORCHESTRATION_SERVICE_URL")
 	if orchestrationURL == "" {
-		orchestrationURL = "http://localhost:8080" // Default to local orchestration service
+		orchestrationURL = "http://localhost:8081" // Default to local orchestration service
 	}
 
 	// Get port from environment
 	port := os.Getenv("PORT")
 	if port == "" {
-		port = "8081" // Default port for gateway
+		port = "8080" // Default port for gateway
 	}
 
 	// Initialize gateway handler

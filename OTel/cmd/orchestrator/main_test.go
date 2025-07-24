@@ -206,7 +206,7 @@ func TestConfig(t *testing.T) {
 	cfg := config.New()
 
 	// Test default port
-	if cfg.Port != "8080" {
-		t.Errorf("Expected default port to be '8080', got '%s'", cfg.Port)
+	if cfg.Port != "8081" {
+		t.Errorf("Expected default port to be '8081', got '%s'", cfg.Port)
 	}
 }
