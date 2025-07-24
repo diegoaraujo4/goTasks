@@ -5,7 +5,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
-	"regexp"
 
 	"otel/pkg/validator"
 )
@@ -56,7 +55,7 @@ func (h *GatewayHandler) ProcessCEP(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Validate CEP
-	if !isValidCEP(req.CEP) {
+	if !validator.ValidateCEP(req.CEP) {
 		w.WriteHeader(http.StatusUnprocessableEntity)
 		json.NewEncoder(w).Encode(ErrorResponse{Message: "invalid zipcode"})
 		return
@@ -73,18 +72,6 @@ func (h *GatewayHandler) ProcessCEP(w http.ResponseWriter, r *http.Request) {
 	// Return the response from orchestration service
 	w.WriteHeader(http.StatusOK)
 	w.Write(response)
-}
-
-// isValidCEP validates if the CEP is a valid 8-digit string
-func isValidCEP(cep string) bool {
-	// Check if it's a string and has exactly 8 digits
-	if len(cep) != 8 {
-		return false
-	}
-
-	// Check if all characters are digits
-	matched, _ := regexp.MatchString(`^\d{8}$`, cep)
-	return matched
 }
 
 // forwardToOrchestrationService forwards the CEP to the orchestration service
