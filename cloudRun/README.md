@@ -160,17 +160,17 @@ make docker-stop
 
 ### Gerando a Documentação
 
-A documentação é gerada automaticamente a partir das anotações no código:
+A documentação é gerada automaticamente a partir das anotações no código usando a ferramenta `swag`:
 
 ```bash
 # Instalar ferramenta swag (primeira vez)
-make swagger-install
+go install github.com/swaggo/swag/cmd/swag@latest
 
 # Gerar documentação
-make swagger-gen
+swag init -g cmd/api/main.go
 
-# Executar aplicação com Swagger UI
-make swagger-serve
+# Executar aplicação
+go run ./cmd/api
 ```
 
 ### Acessando a Documentação
@@ -196,10 +196,11 @@ O projeto inclui testes automatizados abrangentes:
 
 ```bash
 # Executar todos os testes
-make test
+go test -v ./...
 
 # Executar testes com coverage
-make test-coverage
+go test -v -coverprofile=coverage.out ./...
+go tool cover -html=coverage.out -o coverage.html
 
 # Executar testes em container Docker
 make docker-test
@@ -235,11 +236,32 @@ gcloud run deploy weather-api \
   --set-env-vars WEATHER_API_KEY=$WEATHER_API_KEY
 ```
 
-### Deploy com Make
+### Deploy com Docker
 ```bash
+# Build e teste local
 make docker-build
 make docker-run
+
+# Para produção, use o Cloud Build ou faça push da imagem para Container Registry
 ```
+
+## 🔧 Resolução de Problemas
+
+### Erro "error fetching weather data"
+
+Se você encontrar este erro, verifique:
+
+1. **API Key válida**: Certifique-se de que `WEATHER_API_KEY` está configurada corretamente
+2. **Conectividade HTTPS**: A aplicação usa HTTPS para conectar com `api.weatherapi.com`
+3. **CEP válido**: Verifique se o CEP tem 8 dígitos e existe no Brasil
+
+### Problemas de Rede
+
+A aplicação faz chamadas para:
+- `https://viacep.com.br/ws/{cep}/json/` - Para buscar informações do CEP
+- `https://api.weatherapi.com/v1/current.json` - Para buscar dados meteorológicos
+
+Certifique-se de que essas URLs estão acessíveis do seu ambiente.
 
 ## Estrutura do Projeto
 
@@ -284,8 +306,11 @@ cloudRun/
 ├── docs/                    # Documentação Swagger gerada
 ├── go.mod                   # Dependências do Go
 ├── go.sum                   # Checksums das dependências
-├── Makefile                 # Comandos de automação
+├── Makefile                 # Comandos Docker simplificados
 ├── .env.example             # Exemplo de variáveis de ambiente
+├── .env                     # Variáveis de ambiente (local)
+├── docker-compose.yml       # Orquestração Docker local
+├── Dockerfile               # Container para produção
 └── README.md                # Esta documentação
 ```
 
@@ -293,10 +318,24 @@ cloudRun/
 
 - **Go 1.24.5**: Linguagem de programação
 - **Gorilla Mux**: Router HTTP
-- **ViaCEP API**: Consulta de informações por CEP
-- **WeatherAPI**: Consulta de informações meteorológicas
+- **ViaCEP API**: Consulta de informações por CEP (https://viacep.com.br)
+- **WeatherAPI**: Consulta de informações meteorológicas (https://weatherapi.com)
 - **Docker**: Containerização
 - **Google Cloud Run**: Plataforma de deploy
+
+## 📋 Changelog
+
+### v1.1 - Correções de Conectividade
+- ✅ **Fix**: Atualizado Weather API para usar HTTPS
+- ✅ **Fix**: Adicionado URL encoding para cidades com caracteres especiais
+- ✅ **Improvement**: Melhorada a tratativa de erros com logs mais detalhados
+- ✅ **Update**: Removidas credenciais de API do README por segurança
+
+### v1.0 - Versão Inicial
+- ✅ Implementação completa da API de clima por CEP
+- ✅ Integração com ViaCEP e WeatherAPI
+- ✅ Documentação Swagger
+- ✅ Deploy no Google Cloud Run
 
 ## Exemplos de Uso
 
