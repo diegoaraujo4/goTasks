@@ -3,6 +3,7 @@ package main
 import (
 	"log"
 	"net/http"
+	"time"
 
 	_ "otel/docs" // Import docs for swagger
 
@@ -38,25 +39,39 @@ import (
 // @tag.description Health check da aplicação
 
 func main() {
+	log.Printf("[MAIN] Starting OTEL Orchestration Service...")
+
 	// Load configuration
+	log.Printf("[MAIN] Loading configuration...")
 	cfg := config.New()
 	if err := cfg.Validate(); err != nil {
-		log.Fatal(err)
+		log.Fatalf("[MAIN] Configuration validation failed: %v", err)
 	}
+	log.Printf("[MAIN] Configuration loaded successfully - Port: %s", cfg.Port)
 
 	// Initialize repositories
+	log.Printf("[MAIN] Initializing repositories...")
 	locationRepo := repository.NewViaCEPRepository()
 	weatherRepo := repository.NewWeatherAPIRepository(cfg.WeatherAPIKey)
+	log.Printf("[MAIN] Repositories initialized successfully")
 
 	// Initialize services
+	log.Printf("[MAIN] Initializing services...")
 	weatherService := service.NewWeatherService(locationRepo, weatherRepo)
+	log.Printf("[MAIN] Services initialized successfully")
 
 	// Initialize handlers
+	log.Printf("[MAIN] Initializing handlers...")
 	weatherHandler := handler.NewWeatherHandler(weatherService)
 	healthHandler := handler.NewHealthHandler()
+	log.Printf("[MAIN] Handlers initialized successfully")
 
 	// Setup router
+	log.Printf("[MAIN] Setting up routes...")
 	r := mux.NewRouter()
+
+	// Add logging middleware
+	r.Use(loggingMiddleware)
 
 	// API endpoints
 	r.HandleFunc("/weather/{cep}", weatherHandler.GetWeatherByCEP).Methods("GET")
@@ -65,7 +80,45 @@ func main() {
 	// Swagger documentation
 	r.PathPrefix("/swagger/").Handler(httpSwagger.WrapHandler)
 
-	log.Printf("OTEL Orchestration Service starting on port %s", cfg.Port)
-	log.Printf("Swagger documentation available at: http://localhost:%s/swagger/index.html", cfg.Port)
+	log.Printf("[MAIN] Routes configured: GET /weather/{cep}, GET /health, /swagger/")
+
+	log.Printf("[MAIN] OTEL Orchestration Service starting on port %s", cfg.Port)
+	log.Printf("[MAIN] Swagger documentation available at: http://localhost:%s/swagger/index.html", cfg.Port)
+	log.Printf("[MAIN] Server ready to accept connections...")
 	log.Fatal(http.ListenAndServe(":"+cfg.Port, r))
+}
+
+// loggingMiddleware logs all incoming requests
+func loggingMiddleware(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		start := time.Now()
+
+		clientIP := r.RemoteAddr
+		if forwarded := r.Header.Get("X-Forwarded-For"); forwarded != "" {
+			clientIP = forwarded
+		}
+
+		log.Printf("[REQUEST] %s %s from %s - User-Agent: %s",
+			r.Method, r.URL.Path, clientIP, r.Header.Get("User-Agent"))
+
+		// Create a custom ResponseWriter to capture status code
+		lrw := &loggingResponseWriter{ResponseWriter: w, statusCode: http.StatusOK}
+
+		next.ServeHTTP(lrw, r)
+
+		duration := time.Since(start)
+		log.Printf("[RESPONSE] %s %s - Status: %d, Duration: %v, Client: %s",
+			r.Method, r.URL.Path, lrw.statusCode, duration, clientIP)
+	})
+}
+
+// loggingResponseWriter wraps http.ResponseWriter to capture status code
+type loggingResponseWriter struct {
+	http.ResponseWriter
+	statusCode int
+}
+
+func (lrw *loggingResponseWriter) WriteHeader(code int) {
+	lrw.statusCode = code
+	lrw.ResponseWriter.WriteHeader(code)
 }

@@ -3,7 +3,9 @@ package handler
 import (
 	"encoding/json"
 	"errors"
+	"log"
 	"net/http"
+	"time"
 
 	"otel/internal/domain"
 	"otel/internal/service"
@@ -18,6 +20,7 @@ type WeatherHandler struct {
 
 // NewWeatherHandler creates a new weather handler
 func NewWeatherHandler(weatherService *service.WeatherService) *WeatherHandler {
+	log.Printf("[ORCHESTRATOR] Initializing weather handler")
 	return &WeatherHandler{
 		weatherService: weatherService,
 	}
@@ -36,15 +39,26 @@ func NewWeatherHandler(weatherService *service.WeatherService) *WeatherHandler {
 // @Failure 500 {object} domain.ErrorResponse "Erro interno do servidor"
 // @Router /weather/{cep} [get]
 func (h *WeatherHandler) GetWeatherByCEP(w http.ResponseWriter, r *http.Request) {
+	startTime := time.Now()
+	clientIP := r.RemoteAddr
+	if forwarded := r.Header.Get("X-Forwarded-For"); forwarded != "" {
+		clientIP = forwarded
+	}
+
 	vars := mux.Vars(r)
 	cep := vars["cep"]
 
+	log.Printf("[ORCHESTRATOR] Received weather request for CEP: %s from %s", cep, clientIP)
+
 	weather, err := h.weatherService.GetWeatherByCEP(cep)
 	if err != nil {
+		log.Printf("[ORCHESTRATOR] Error processing CEP %s from %s: %v", cep, clientIP, err)
 		h.handleError(w, err)
 		return
 	}
 
+	duration := time.Since(startTime)
+	log.Printf("[ORCHESTRATOR] Successfully processed weather request for CEP: %s from %s in %v", cep, clientIP, duration)
 	h.sendJSON(w, http.StatusOK, weather)
 }
 
@@ -57,24 +71,32 @@ func (h *WeatherHandler) handleError(w http.ResponseWriter, err error) {
 	case errors.Is(err, service.ErrInvalidCEP):
 		statusCode = http.StatusUnprocessableEntity
 		message = service.ErrInvalidCEP.Error()
+		log.Printf("[ORCHESTRATOR] Invalid CEP error: %v", err)
 	case errors.Is(err, service.ErrCEPNotFound):
 		statusCode = http.StatusNotFound
 		message = service.ErrCEPNotFound.Error()
+		log.Printf("[ORCHESTRATOR] CEP not found error: %v", err)
 	case errors.Is(err, service.ErrWeatherDataUnavailable):
 		statusCode = http.StatusInternalServerError
 		message = service.ErrWeatherDataUnavailable.Error()
+		log.Printf("[ORCHESTRATOR] Weather data unavailable error: %v", err)
 	default:
 		statusCode = http.StatusInternalServerError
 		message = "internal server error"
+		log.Printf("[ORCHESTRATOR] Unexpected error: %v", err)
 	}
 
+	log.Printf("[ORCHESTRATOR] Sending error response - Status: %d, Message: %s", statusCode, message)
 	errorResponse := domain.ErrorResponse{Message: message}
 	h.sendJSON(w, statusCode, errorResponse)
 }
 
 // sendJSON sends a JSON response
 func (h *WeatherHandler) sendJSON(w http.ResponseWriter, statusCode int, data interface{}) {
+	log.Printf("[ORCHESTRATOR] Sending JSON response - Status: %d", statusCode)
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(statusCode)
-	json.NewEncoder(w).Encode(data)
+	if err := json.NewEncoder(w).Encode(data); err != nil {
+		log.Printf("[ORCHESTRATOR] Error encoding JSON response: %v", err)
+	}
 }
