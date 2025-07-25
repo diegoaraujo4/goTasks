@@ -39,11 +39,19 @@ func (u *AuctionController) FindAuctions(c *gin.Context) {
 	category := c.Query("category")
 	productName := c.Query("productName")
 
-	statusNumber, errConv := strconv.Atoi(status)
-	if errConv != nil {
-		errRest := rest_err.NewBadRequestError("Error trying to validate auction status param")
-		c.JSON(errRest.Code, errRest)
-		return
+	var statusNumber int
+	var errConv error
+
+	// Se status não foi fornecido, usa -1 para indicar "sem filtro de status"
+	if status == "" {
+		statusNumber = -1 // Use -1 to indicate no status filter
+	} else {
+		statusNumber, errConv = strconv.Atoi(status)
+		if errConv != nil {
+			errRest := rest_err.NewBadRequestError("Error trying to validate auction status param")
+			c.JSON(errRest.Code, errRest)
+			return
+		}
 	}
 
 	auctions, err := u.auctionUseCase.FindAuctions(context.Background(),

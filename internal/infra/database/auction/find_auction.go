@@ -40,7 +40,9 @@ func (repo *AuctionRepository) FindAuctions(
 	productName string) ([]auction_entity.Auction, *internal_error.InternalError) {
 	filter := bson.M{}
 
-	if status != 0 {
+	// -1 indica "sem filtro de status" (retorna todos os leilões)
+	// 0 = Active, 1 = Completed (aplica filtro específico)
+	if status != -1 {
 		filter["status"] = status
 	}
 
