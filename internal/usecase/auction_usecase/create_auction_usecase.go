@@ -79,7 +79,7 @@ func (au *AuctionUseCase) CreateAuction(
 	}
 
 	if err := au.auctionRepositoryInterface.CreateAuction(
-		ctx, auction); err != nil {
+		auction); err != nil {
 		return err
 	}
 
