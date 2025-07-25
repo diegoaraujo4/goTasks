@@ -1,9 +1,9 @@
 package user_usecase
 
 import (
+	"auctionService/internal/entity/user_entity"
+	"auctionService/internal/internal_error"
 	"context"
-	"fullcycle-auction_go/internal/entity/user_entity"
-	"fullcycle-auction_go/internal/internal_error"
 )
 
 func NewUserUseCase(userRepository user_entity.UserRepositoryInterface) UserUseCaseInterface {

@@ -1,12 +1,13 @@
 package bid_controller
 
 import (
+	"auctionService/configuration/rest_err"
+	"auctionService/internal/infra/api/web/validation"
+	"auctionService/internal/usecase/bid_usecase"
 	"context"
-	"fullcycle-auction_go/configuration/rest_err"
-	"fullcycle-auction_go/internal/infra/api/web/validation"
-	"fullcycle-auction_go/internal/usecase/bid_usecase"
-	"github.com/gin-gonic/gin"
 	"net/http"
+
+	"github.com/gin-gonic/gin"
 )
 
 type BidController struct {

@@ -1,11 +1,11 @@
 package auction_usecase
 
 import (
+	"auctionService/configuration/logger"
+	"auctionService/internal/entity/auction_entity"
+	"auctionService/internal/internal_error"
+	"auctionService/internal/usecase/bid_usecase"
 	"context"
-	"fullcycle-auction_go/configuration/logger"
-	"fullcycle-auction_go/internal/entity/auction_entity"
-	"fullcycle-auction_go/internal/internal_error"
-	"fullcycle-auction_go/internal/usecase/bid_usecase"
 )
 
 func (au *AuctionUseCase) FindAuctionById(

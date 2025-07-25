@@ -1,12 +1,13 @@
 package user
 
 import (
+	"auctionService/configuration/logger"
+	"auctionService/internal/entity/user_entity"
+	"auctionService/internal/internal_error"
 	"context"
 	"errors"
 	"fmt"
-	"fullcycle-auction_go/configuration/logger"
-	"fullcycle-auction_go/internal/entity/user_entity"
-	"fullcycle-auction_go/internal/internal_error"
+
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
 )

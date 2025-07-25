@@ -1,10 +1,10 @@
 package bid_usecase
 
 import (
+	"auctionService/configuration/logger"
+	"auctionService/internal/entity/bid_entity"
+	"auctionService/internal/internal_error"
 	"context"
-	"fullcycle-auction_go/configuration/logger"
-	"fullcycle-auction_go/internal/entity/bid_entity"
-	"fullcycle-auction_go/internal/internal_error"
 	"os"
 	"strconv"
 	"time"

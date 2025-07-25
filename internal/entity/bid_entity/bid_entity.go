@@ -1,10 +1,11 @@
 package bid_entity
 
 import (
+	"auctionService/internal/internal_error"
 	"context"
-	"fullcycle-auction_go/internal/internal_error"
-	"github.com/google/uuid"
 	"time"
+
+	"github.com/google/uuid"
 )
 
 type Bid struct {

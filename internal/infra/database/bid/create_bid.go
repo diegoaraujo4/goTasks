@@ -1,12 +1,12 @@
 package bid
 
 import (
+	"auctionService/configuration/logger"
+	"auctionService/internal/entity/auction_entity"
+	"auctionService/internal/entity/bid_entity"
+	"auctionService/internal/infra/database/auction"
+	"auctionService/internal/internal_error"
 	"context"
-	"fullcycle-auction_go/configuration/logger"
-	"fullcycle-auction_go/internal/entity/auction_entity"
-	"fullcycle-auction_go/internal/entity/bid_entity"
-	"fullcycle-auction_go/internal/infra/database/auction"
-	"fullcycle-auction_go/internal/internal_error"
 	"os"
 	"sync"
 	"time"

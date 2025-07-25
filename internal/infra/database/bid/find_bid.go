@@ -1,14 +1,15 @@
 package bid
 
 import (
+	"auctionService/configuration/logger"
+	"auctionService/internal/entity/bid_entity"
+	"auctionService/internal/internal_error"
 	"context"
 	"fmt"
-	"fullcycle-auction_go/configuration/logger"
-	"fullcycle-auction_go/internal/entity/bid_entity"
-	"fullcycle-auction_go/internal/internal_error"
+	"time"
+
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo/options"
-	"time"
 )
 
 func (bd *BidRepository) FindBidByAuctionId(
